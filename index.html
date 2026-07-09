@@ -5,86 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alternative Word App</title>
     <style>
-        /* Base Styling */
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; display: flex; flex-direction: column; height: 100vh; background-color: #f9f9f9; }
-
-        /* Header & Footer */
-        header { background-color: #00CED1; color: white; padding: 15px; text-align: center; }
-        footer { background-color: #00CED1; color: white; padding: 10px; text-align: center; display: flex; justify-content: space-around; }
+        body { font-family: Arial, sans-serif; padding: 20px; color: black; }
+        .section { margin-bottom: 30px; border: 1px solid #ccc; padding: 20px; }
         
-        #content-area { flex: 1; overflow-y: auto; padding: 20px; }
-        
-        /* Sections */
-        .section-container { background: white; border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
-        
-        /* Titles & Colors */
+        /* Turquoise Styles */
         .title-header, .sub-header { color: #00CED1; }
+        th { background-color: #AFEEEE !important; color: black; }
         
-        /* Tables */
-        table { border-collapse: collapse; width: 100%; margin: 15px 0; }
-        th { background-color: #AFEEEE; padding: 10px; border: 1px solid #999; text-align: center; }
-        td { border: 1px solid #ccc; padding: 8px; min-width: 50px; }
-        
-        /* Buttons */
-        button { background-color: white; color: #00CED1; border: 1px solid #00CED1; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        
-        /* Print Formatting */
+        /* Ensure styles print */
         @media print {
-            header, footer, button { display: none !important; }
-            body { background-color: white; }
-            .section-container { border: none; }
+            button, .no-print { display: none; }
+            th { -webkit-print-color-adjust: exact; }
         }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        td, th { border: 1px solid black; padding: 8px; }
+        img { max-width: 100%; height: auto; display: block; margin: 10px 0; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div id="header-image-preview">رفع صورة الترويسة</div>
-        <input type="file" accept="image/*" onchange="previewImage(event, 'header-image-preview')">
-    </header>
-
-    <div id="content-area">
-        <div class="section-container">
-            <h1 class="title-header" contenteditable="true">عنوان المستند</h1>
-            <h3 class="sub-header" contenteditable="true">عنوان فرعي</h3>
-            <div contenteditable="true">اكتب النص هنا...</div>
-            
-            <table>
-                <thead><tr><th>عمود 1</th><th>عمود 2</th></tr></thead>
-                <tbody><tr><td contenteditable="true">بيانات</td><td contenteditable="true">بيانات</td></tr></tbody>
-            </table>
-        </div>
+    <!-- Header Section -->
+    <div id="header-section" class="section">
+        <input type="text" placeholder="عنوان الترويسة الرئيسي" style="width: 100%; font-size: 24px; font-weight: bold; margin-bottom: 10px;">
+        <input type="file" accept="image/*" onchange="showImage(event, 'header-img')">
+        <div id="header-img"></div>
     </div>
 
-    <footer>
-        <button onclick="addSection()">+ إضافة قسم</button>
-        <button onclick="window.print()">طباعة</button>
-    </footer>
+    <div id="content"></div>
+
+    <div class="no-print">
+        <button onclick="addSection()">إضافة قسم</button>
+        <button onclick="window.print()">طباعة المستند</button>
+    </div>
 
     <script>
-        function previewImage(event, elementId) {
-            const file = event.target.files[0];
-            const preview = document.getElementById(elementId);
+        function showImage(event, targetId) {
             const reader = new FileReader();
             reader.onload = function() {
-                preview.innerHTML = `<img src="${reader.result}" style="max-width:100%; height:auto; display:block; margin: 0 auto;">`;
+                document.getElementById(targetId).innerHTML = `<img src="${reader.result}">`;
             }
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(event.target.files[0]);
         }
 
         function addSection() {
-            const container = document.getElementById('content-area');
+            const rows = prompt("عدد الصفوف:", "2");
+            const cols = prompt("عدد الأعمدة:", "2");
+            
             const div = document.createElement('div');
-            div.className = 'section-container';
+            div.className = 'section';
+            
+            let tableHTML = `<table><thead><tr>`;
+            for(let i=0; i<cols; i++) tableHTML += `<th>عنوان</th>`;
+            tableHTML += `</tr></thead><tbody>`;
+            for(let r=0; r<rows; r++) {
+                tableHTML += `<tr>`;
+                for(let c=0; c<cols; c++) tableHTML += `<td><input type="text" style="width:90%"></td>`;
+                tableHTML += `</tr>`;
+            }
+            tableHTML += `</tbody></table>`;
+
             div.innerHTML = `
-                <h2 class="title-header" contenteditable="true">قسم جديد</h2>
-                <div contenteditable="true">نص القسم...</div>
-                <table>
-                    <thead><tr><th>عمود</th><th>عمود</th></tr></thead>
-                    <tbody><tr><td contenteditable="true">..</td><td contenteditable="true">..</td></tr></tbody>
-                </table>
+                <h2 class="title-header" contenteditable="true">عنوان القسم</h2>
+                <input type="file" accept="image/*" onchange="showImage(event, 'img-${Date.now()}')">
+                <div id="img-${Date.now()}"></div>
+                ${tableHTML}
             `;
-            container.appendChild(div);
+            document.getElementById('content').appendChild(div);
         }
     </script>
 </body>
