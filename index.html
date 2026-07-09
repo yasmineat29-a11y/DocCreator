@@ -5,45 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alternative Word App</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; color: black; }
-        .section { margin-bottom: 30px; border: 1px solid #ccc; padding: 20px; }
+        body { font-family: Arial, sans-serif; color: black; padding: 20px; }
         
-        /* Turquoise Styles */
-        .title-header, .sub-header { color: #00CED1; }
+        /* Layout and Text */
+        .section { margin-bottom: 30px; padding: 10px; }
+        .title-header { color: #00CED1; font-weight: bold; }
+        
+        /* Table: Borderless cells */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        td, th { padding: 8px; border: none; text-align: inherit; }
         th { background-color: #AFEEEE !important; color: black; }
         
-        /* Ensure styles print */
+        /* Photo sizing */
+        .user-img { max-width: 150px; height: auto; display: block; margin: 5px 0; }
+        
+        /* Hide controls when printing */
         @media print {
-            button, .no-print { display: none; }
+            .no-print { display: none !important; }
             th { -webkit-print-color-adjust: exact; }
         }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        td, th { border: 1px solid black; padding: 8px; }
-        img { max-width: 100%; height: auto; display: block; margin: 10px 0; }
     </style>
 </head>
 <body>
 
-    <!-- Header Section -->
+    <div class="no-print" style="margin-bottom: 20px;">
+        <label>اتخاد النص: </label>
+        <button onclick="setDir('rtl')">RTL (يمين)</button>
+        <button onclick="setDir('ltr')">LTR (يسار)</button>
+    </div>
+
     <div id="header-section" class="section">
-        <input type="text" placeholder="عنوان الترويسة الرئيسي" style="width: 100%; font-size: 24px; font-weight: bold; margin-bottom: 10px;">
-        <input type="file" accept="image/*" onchange="showImage(event, 'header-img')">
+        <input type="text" placeholder="عنوان الترويسة" style="width: 100%; font-size: 24px; border: none; font-weight: bold; margin-bottom: 5px;">
+        <input type="file" class="no-print" accept="image/*" onchange="showImage(event, 'header-img')">
         <div id="header-img"></div>
     </div>
 
     <div id="content"></div>
 
-    <div class="no-print">
-        <button onclick="addSection()">إضافة قسم</button>
-        <button onclick="window.print()">طباعة المستند</button>
+    <div class="no-print" style="margin-top: 20px;">
+        <button onclick="addSection()">+ إضافة قسم</button>
+        <button onclick="window.print()">طباعة</button>
     </div>
 
     <script>
+        function setDir(dir) { document.documentElement.dir = dir; }
+
         function showImage(event, targetId) {
             const reader = new FileReader();
             reader.onload = function() {
-                document.getElementById(targetId).innerHTML = `<img src="${reader.result}">`;
+                const img = document.createElement('img');
+                img.src = reader.result;
+                img.className = 'user-img';
+                const target = document.getElementById(targetId);
+                target.innerHTML = '';
+                target.appendChild(img);
             }
             reader.readAsDataURL(event.target.files[0]);
         }
@@ -51,24 +66,24 @@
         function addSection() {
             const rows = prompt("عدد الصفوف:", "2");
             const cols = prompt("عدد الأعمدة:", "2");
-            
             const div = document.createElement('div');
             div.className = 'section';
             
+            const sectionId = 'sec-' + Date.now();
             let tableHTML = `<table><thead><tr>`;
             for(let i=0; i<cols; i++) tableHTML += `<th>عنوان</th>`;
             tableHTML += `</tr></thead><tbody>`;
             for(let r=0; r<rows; r++) {
                 tableHTML += `<tr>`;
-                for(let c=0; c<cols; c++) tableHTML += `<td><input type="text" style="width:90%"></td>`;
+                for(let c=0; c<cols; c++) tableHTML += `<td><input type="text" style="width:90%; border:none;"></td>`;
                 tableHTML += `</tr>`;
             }
             tableHTML += `</tbody></table>`;
 
             div.innerHTML = `
-                <h2 class="title-header" contenteditable="true">عنوان القسم</h2>
-                <input type="file" accept="image/*" onchange="showImage(event, 'img-${Date.now()}')">
-                <div id="img-${Date.now()}"></div>
+                <div class="title-header" contenteditable="true">عنوان القسم</div>
+                <input type="file" class="no-print" accept="image/*" onchange="showImage(event, '${sectionId}-img')">
+                <div id="${sectionId}-img"></div>
                 ${tableHTML}
             `;
             document.getElementById('content').appendChild(div);
