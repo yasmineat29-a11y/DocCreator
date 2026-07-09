@@ -5,43 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alternative Word App</title>
     <style>
-        body { font-family: Arial, sans-serif; color: black !important; padding: 20px; }
+        body { font-family: Arial, sans-serif; color: black !important; padding: 10px; margin: 0; }
         
-        /* Section styling */
-        .section { margin-bottom: 40px; padding: 15px; border-bottom: 2px solid #eee; }
+        /* Compact sections */
+        .section { margin-bottom: 10px; padding: 5px; border-bottom: none; }
         
         /* Titles and Text */
-        .title-header { font-weight: bold; font-size: 20px; color: black !important; margin-bottom: 5px; }
-        .sub-header { font-weight: bold; color: black !important; margin-bottom: 5px; }
-        .description-box { margin-bottom: 10px; color: black !important; }
+        .title-header { font-weight: bold; font-size: 18px; color: black !important; margin-bottom: 2px; }
+        .sub-header { font-weight: bold; font-size: 16px; color: black !important; margin-bottom: 2px; }
+        .description-box { margin-bottom: 5px; font-size: 14px; color: black !important; }
         
-        /* Table: Borders enabled */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        td, th { padding: 8px; border: 1px solid black !important; color: black !important; }
-        th { background-color: #AFEEEE !important; }
+        /* Table: Compact and fully editable */
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        td, th { padding: 4px; border: 1px solid black !important; color: black !important; }
+        th { background-color: #AFEEEE !important; text-align: center; }
+        input[type="text"] { width: 100%; border: none; background: transparent; color: black; font-family: Arial; }
         
-        /* Photo sizing */
-        .user-img { max-width: 150px; height: auto; display: block; margin: 5px 0; }
+        .user-img { max-width: 150px; height: auto; display: block; margin: 2px 0; }
         
-        /* Hide controls when printing */
         @media print {
             .no-print { display: none !important; }
             th { -webkit-print-color-adjust: exact; }
+            .section { margin-bottom: 5px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Direction Toggle -->
-    <div class="no-print" style="margin-bottom: 20px; border: 1px solid #ccc; padding: 10px;">
-        <label>اتخاد النص: </label>
+    <div class="no-print" style="margin-bottom: 10px; padding: 5px; border: 1px solid #ccc; display: inline-block;">
         <button onclick="setDir('rtl')">RTL (يمين)</button>
         <button onclick="setDir('ltr')">LTR (يسار)</button>
     </div>
 
     <div id="content"></div>
 
-    <div class="no-print" style="margin-top: 20px;">
+    <div class="no-print" style="margin-top: 10px;">
         <button onclick="addSection()">+ إضافة قسم</button>
         <button onclick="window.print()">طباعة</button>
     </div>
@@ -69,20 +67,22 @@
             div.className = 'section';
             
             const sectionId = 'sec-' + Date.now();
+            
+            // Build Table with Editable Header Cells
             let tableHTML = `<table><thead><tr>`;
-            for(let i=0; i<cols; i++) tableHTML += `<th>عنوان</th>`;
+            for(let i=0; i<cols; i++) tableHTML += `<th><input type="text" value="عنوان"></th>`;
             tableHTML += `</tr></thead><tbody>`;
             for(let r=0; r<rows; r++) {
                 tableHTML += `<tr>`;
-                for(let c=0; c<cols; c++) tableHTML += `<td><input type="text" style="width:90%; border:none; background:transparent;"></td>`;
+                for(let c=0; c<cols; c++) tableHTML += `<td><input type="text"></td>`;
                 tableHTML += `</tr>`;
             }
             tableHTML += `</tbody></table>`;
 
             div.innerHTML = `
-                <div class="title-header" contenteditable="true">عنوان القسم (Header)</div>
+                <div class="title-header" contenteditable="true">عنوان القسم</div>
                 <div class="sub-header" contenteditable="true">عنوان فرعي</div>
-                <div class="description-box" contenteditable="true">وصف القسم (Description)...</div>
+                <div class="description-box" contenteditable="true">الوصف...</div>
                 <input type="file" class="no-print" accept="image/*" onchange="showImage(event, '${sectionId}-img')">
                 <div id="${sectionId}-img"></div>
                 ${tableHTML}
