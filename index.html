@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alternative Word App</title>
+    <style>
+        /* Base Styling */
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; display: flex; flex-direction: column; height: 100vh; background-color: #f9f9f9; }
+
+        /* Header & Footer */
+        header { background-color: #00CED1; color: white; padding: 15px; text-align: center; }
+        footer { background-color: #00CED1; color: white; padding: 10px; text-align: center; display: flex; justify-content: space-around; }
+        
+        #content-area { flex: 1; overflow-y: auto; padding: 20px; }
+        
+        /* Sections */
+        .section-container { background: white; border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        
+        /* Titles & Colors */
+        .title-header, .sub-header { color: #00CED1; }
+        
+        /* Tables */
+        table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+        th { background-color: #AFEEEE; padding: 10px; border: 1px solid #999; text-align: center; }
+        td { border: 1px solid #ccc; padding: 8px; min-width: 50px; }
+        
+        /* Buttons */
+        button { background-color: white; color: #00CED1; border: 1px solid #00CED1; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        /* Print Formatting */
+        @media print {
+            header, footer, button { display: none !important; }
+            body { background-color: white; }
+            .section-container { border: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div id="header-image-preview">رفع صورة الترويسة</div>
+        <input type="file" accept="image/*" onchange="previewImage(event, 'header-image-preview')">
+    </header>
+
+    <div id="content-area">
+        <div class="section-container">
+            <h1 class="title-header" contenteditable="true">عنوان المستند</h1>
+            <h3 class="sub-header" contenteditable="true">عنوان فرعي</h3>
+            <div contenteditable="true">اكتب النص هنا...</div>
+            
+            <table>
+                <thead><tr><th>عمود 1</th><th>عمود 2</th></tr></thead>
+                <tbody><tr><td contenteditable="true">بيانات</td><td contenteditable="true">بيانات</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <button onclick="addSection()">+ إضافة قسم</button>
+        <button onclick="window.print()">طباعة</button>
+    </footer>
+
+    <script>
+        function previewImage(event, elementId) {
+            const file = event.target.files[0];
+            const preview = document.getElementById(elementId);
+            const reader = new FileReader();
+            reader.onload = function() {
+                preview.innerHTML = `<img src="${reader.result}" style="max-width:100%; height:auto; display:block; margin: 0 auto;">`;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function addSection() {
+            const container = document.getElementById('content-area');
+            const div = document.createElement('div');
+            div.className = 'section-container';
+            div.innerHTML = `
+                <h2 class="title-header" contenteditable="true">قسم جديد</h2>
+                <div contenteditable="true">نص القسم...</div>
+                <table>
+                    <thead><tr><th>عمود</th><th>عمود</th></tr></thead>
+                    <tbody><tr><td contenteditable="true">..</td><td contenteditable="true">..</td></tr></tbody>
+                </table>
+            `;
+            container.appendChild(div);
+        }
+    </script>
+</body>
+</html>
