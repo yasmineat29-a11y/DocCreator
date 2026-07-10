@@ -10,54 +10,46 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 10px; margin: 0; }
         
-        /* هيكل الطباعة للترويسة */
-        .print-only-header { display: table-header-group; }
-        .page-header { display: flex; align-items: center; gap: 15px; padding: 10px; border-bottom: 2px solid #ccc; }
+        /* الترويسة */
+        .print-header { display: none; }
+        .page-header { display: flex; align-items: center; gap: 15px; padding: 10px; border-bottom: 2px solid #333; margin-bottom: 20px; }
         .page-header img { width: 50px; height: 50px; object-fit: cover; }
-
-        .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; position: relative; }
-        .delete-btn { color: red; cursor: pointer; position: absolute; top: 5px; left: 5px; font-weight: bold; }
         
-        .title-header, .sub-header { text-align: center; font-weight: bold; }
+        /* الأقسام */
+        .section { margin-bottom: 25px; padding: 10px; border: 1px solid #ccc; position: relative; }
+        .delete-btn { color: red; cursor: pointer; position: absolute; top: 5px; left: 5px; font-weight: bold; font-size: 14px; }
+        .title-header, .sub-header { text-align: center; font-weight: bold; margin: 5px 0; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        td, th { padding: 8px; border: 1px solid black !important; text-align: center; }
+        /* الجداول */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        td, th { padding: 8px; border: 1px solid black !important; text-align: center; word-wrap: break-word; }
         th { background-color: #AFEEEE !important; }
-        
-        /* تكرار رأس الجدول في الطباعة */
-        thead { display: table-header-group; }
-
-        .cell-edit { min-height: 20px; outline: none; white-space: pre-wrap; word-break: break-word; }
+        .cell-edit { min-height: 20px; outline: none; white-space: pre-wrap; }
 
         @media print {
             .no-print { display: none !important; }
+            .print-header { display: table-header-group; }
+            thead { display: table-header-group; }
         }
     </style>
 </head>
 <body>
 
-    <table style="width: 100%; border: none;">
-        <thead class="print-only-header">
-            <tr>
-                <td>
-                    <div class="page-header">
-                        <div id="header-img"></div>
-                        <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند</h2>
-                    </div>
-                </td>
-            </tr>
+    <table style="width:100%; border:none;">
+        <thead class="print-header">
+            <tr><td><div class="page-header"><div id="print-img"></div><h2 contenteditable="true">عنوان المستند الرئيسي</h2></div></td></tr>
         </thead>
     </table>
 
-    <div id="ui-header" class="page-header no-print">
-        <input type="file" accept="image/*" onchange="showImage(event, 'header-img')">
-        <div id="header-img"></div>
-        <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند</h2>
+    <div class="page-header no-print">
+        <input type="file" accept="image/*" onchange="showImage(event, 'print-img', 'screen-img')">
+        <div id="screen-img"></div>
+        <h2 contenteditable="true" style="margin: 0;">عنوان المستند الرئيسي</h2>
     </div>
 
     <div id="content"></div>
 
-    <div class="no-print" style="margin-top: 20px;">
+    <div class="no-print" style="margin-top: 20px; padding: 10px; border-top: 2px solid #eee;">
         <button onclick="setDir('rtl')">RTL</button>
         <button onclick="setDir('ltr')">LTR</button>
         <button onclick="addSection()">+ إضافة قسم</button>
@@ -68,16 +60,16 @@
     <script>
         function setDir(dir) { document.documentElement.dir = dir; }
 
-        function showImage(event, targetId) {
+        function showImage(event, id1, id2) {
             const reader = new FileReader();
             reader.onload = function() {
                 const img = document.createElement('img');
                 img.src = reader.result;
                 img.style.width = '50px';
-                document.querySelectorAll('#' + targetId).forEach(el => {
-                    el.innerHTML = '';
-                    el.appendChild(img.cloneNode(true));
-                });
+                document.getElementById(id1).innerHTML = '';
+                document.getElementById(id2).innerHTML = '';
+                document.getElementById(id1).appendChild(img.cloneNode(true));
+                document.getElementById(id2).appendChild(img);
             }
             reader.readAsDataURL(event.target.files[0]);
         }
@@ -99,7 +91,7 @@
             tableHTML += `</tbody></table>`;
 
             div.innerHTML = `
-                <span class="delete-btn no-print" onclick="this.parentElement.remove()">[حذف]</span>
+                <span class="delete-btn" onclick="this.parentElement.remove()">[حذف]</span>
                 <div class="title-header" contenteditable="true">عنوان القسم</div>
                 <div class="sub-header" contenteditable="true">عنوان فرعي</div>
                 <div contenteditable="true">الوصف...</div>
@@ -109,11 +101,8 @@
         }
 
         function exportToWord() {
-            // دمج الترويسة (من الجدول) والمحتوى
-            const header = document.querySelector('.print-only-header').outerHTML;
             const content = document.getElementById('content').innerHTML;
-            const fullHtml = `<html><body dir="${document.documentElement.dir}"><table>${header}</table>${content}</body></html>`;
-            
+            const fullHtml = `<html><body dir="${document.documentElement.dir}">${content}</body></html>`;
             const converted = htmlDocx.asBlob(fullHtml);
             saveAs(converted, 'document.docx');
         }
