@@ -4,52 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alternative Word App</title>
-    <script src="https://unpkg.com/html-docx-js@0.3.1/dist/html-docx.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script>
+    
+    <script src="html-docx.js"></script>
+    <script src="FileSaver.js"></script>
     
     <style>
         body { font-family: Arial, sans-serif; padding: 10px; margin: 0; }
         
-        /* الترويسة الثابتة */
-        .page-header { display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #ccc; padding: 10px; }
-        .page-header img { width: 60px; height: 60px; object-fit: cover; }
-        
-        /* الأقسام */
+        /* تنسيق الترويسة */
+        .page-header { display: flex; align-items: center; gap: 15px; padding: 10px; border-bottom: 2px solid #ccc; background: white; }
+        .page-header img { width: 50px; height: 50px; object-fit: cover; }
+
         .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; position: relative; }
         .delete-btn { color: red; cursor: pointer; position: absolute; top: 5px; left: 5px; font-weight: bold; }
         
-        /* العناوين محاذاة في الوسط */
-        .title-header, .sub-header { text-align: center; font-weight: bold; margin-bottom: 2px; }
+        .title-header, .sub-header { text-align: center; font-weight: bold; }
         
-        /* الجداول - تثبيت الرأس والأسطر الجديدة */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         td, th { padding: 8px; border: 1px solid black !important; text-align: center; }
-        th { background-color: #AFEEEE !important; position: sticky; top: 0; z-index: 10; }
-        
-        /* الأسطر الجديدة */
+        th { background-color: #AFEEEE !important; }
+
         .cell-edit { min-height: 20px; outline: none; white-space: pre-wrap; word-break: break-word; }
 
         @media print {
             .no-print { display: none !important; }
-            thead { display: table-header-group; }
+            /* تثبيت الترويسة في الطباعة */
+            body { margin-top: 80px; }
+            .header-container { position: fixed; top: 0; left: 0; width: 100%; height: 80px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="page-header">
-        <input type="file" class="no-print" accept="image/*" onchange="showImage(event, 'header-img')">
-        <div id="header-img"></div>
-        <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند الرئيسي</h2>
+    <div class="header-container">
+        <div class="page-header">
+            <div id="header-img"></div>
+            <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند</h2>
+        </div>
     </div>
 
-    <div id="content"></div>
+    <div id="content" style="margin-top: 20px;"></div>
 
-    <div class="no-print" style="margin-top: 20px;">
+    <div class="no-print" style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px;">
         <button onclick="setDir('rtl')">RTL</button>
         <button onclick="setDir('ltr')">LTR</button>
         <button onclick="addSection()">+ إضافة قسم</button>
-        <button onclick="exportToWord()">تحميل كـ Word</button>
+        <button onclick="exportToWord()">تحميل Word</button>
         <button onclick="window.print()">طباعة</button>
     </div>
 
@@ -61,17 +61,27 @@
             reader.onload = function() {
                 const img = document.createElement('img');
                 img.src = reader.result;
-                img.style.width = '60px';
-                const target = document.getElementById(targetId);
-                target.innerHTML = '';
-                target.appendChild(img);
+                const container = document.getElementById(targetId);
+                container.innerHTML = '';
+                container.appendChild(img);
             }
             reader.readAsDataURL(event.target.files[0]);
         }
 
+        // إضافة حقل اختيار الصورة للواجهة فقط
+        const header = document.querySelector('.page-header');
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.className = 'no-print';
+        fileInput.onchange = (e) => showImage(e, 'header-img');
+        header.prepend(fileInput);
+
         function addSection() {
             const rows = prompt("عدد الصفوف:", "2");
             const cols = prompt("عدد الأعمدة:", "2");
+            if (!rows || !cols) return;
+            
             const div = document.createElement('div');
             div.className = 'section';
             
@@ -89,17 +99,16 @@
                 <span class="delete-btn no-print" onclick="this.parentElement.remove()">[حذف]</span>
                 <div class="title-header" contenteditable="true">عنوان القسم</div>
                 <div class="sub-header" contenteditable="true">عنوان فرعي</div>
-                <div contenteditable="true" style="margin-bottom: 5px;">الوصف...</div>
+                <div contenteditable="true">الوصف...</div>
                 ${tableHTML}
             `;
             document.getElementById('content').appendChild(div);
         }
 
         function exportToWord() {
-            const header = document.querySelector('.page-header').outerHTML;
+            const header = document.querySelector('.header-container').innerHTML;
             const content = document.getElementById('content').innerHTML;
             const fullHtml = `<html><body dir="${document.documentElement.dir}">${header}${content}</body></html>`;
-            
             const converted = htmlDocx.asBlob(fullHtml);
             saveAs(converted, 'document.docx');
         }
