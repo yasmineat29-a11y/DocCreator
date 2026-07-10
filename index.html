@@ -11,12 +11,9 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 10px; margin: 0; }
         
-        /* الترويسة الثابتة */
-        .page-header { 
-            position: sticky; top: 0; background: white; z-index: 1000;
-            display: flex; align-items: center; gap: 15px; padding: 10px; 
-            border-bottom: 2px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+        /* تنسيق الترويسة */
+        .page-header { display: flex; align-items: center; gap: 15px; padding: 10px; border-bottom: 2px solid #ccc; background: white; }
+        .page-header img { width: 50px; height: 50px; object-fit: cover; }
 
         .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; position: relative; }
         .delete-btn { color: red; cursor: pointer; position: absolute; top: 5px; left: 5px; font-weight: bold; }
@@ -31,23 +28,24 @@
 
         @media print {
             .no-print { display: none !important; }
-            .page-header { position: static; box-shadow: none; }
+            /* تثبيت الترويسة في الطباعة */
+            body { margin-top: 80px; }
+            .header-container { position: fixed; top: 0; left: 0; width: 100%; height: 80px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="page-header">
-        <div id="header-img"></div>
-        <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند</h2>
-        <div class="no-print" style="margin-right: auto;">
-            <input type="file" accept="image/*" onchange="showImage(event, 'header-img')" style="width: 80px;">
+    <div class="header-container">
+        <div class="page-header">
+            <div id="header-img"></div>
+            <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند</h2>
         </div>
     </div>
 
-    <div id="content"></div>
+    <div id="content" style="margin-top: 20px;"></div>
 
-    <div class="no-print" style="margin-top: 20px; position: fixed; bottom: 10px; background: #f0f0f0; padding: 10px; width: 100%;">
+    <div class="no-print" style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px;">
         <button onclick="setDir('rtl')">RTL</button>
         <button onclick="setDir('ltr')">LTR</button>
         <button onclick="addSection()">+ إضافة قسم</button>
@@ -63,7 +61,6 @@
             reader.onload = function() {
                 const img = document.createElement('img');
                 img.src = reader.result;
-                img.style.width = '50px';
                 const container = document.getElementById(targetId);
                 container.innerHTML = '';
                 container.appendChild(img);
@@ -71,10 +68,19 @@
             reader.readAsDataURL(event.target.files[0]);
         }
 
+        // إضافة حقل اختيار الصورة للواجهة فقط
+        const header = document.querySelector('.page-header');
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.className = 'no-print';
+        fileInput.onchange = (e) => showImage(e, 'header-img');
+        header.prepend(fileInput);
+
         function addSection() {
             const rows = prompt("عدد الصفوف:", "2");
             const cols = prompt("عدد الأعمدة:", "2");
-            if(!rows || !cols) return;
+            if (!rows || !cols) return;
             
             const div = document.createElement('div');
             div.className = 'section';
@@ -100,12 +106,9 @@
         }
 
         function exportToWord() {
-            const header = document.querySelector('.page-header').innerHTML;
+            const header = document.querySelector('.header-container').innerHTML;
             const content = document.getElementById('content').innerHTML;
-            const fullHtml = `<html><body dir="${document.documentElement.dir}">
-                <div style="border-bottom: 2px solid #ccc; padding: 10px;">${header}</div>
-                ${content}</body></html>`;
-            
+            const fullHtml = `<html><body dir="${document.documentElement.dir}">${header}${content}</body></html>`;
             const converted = htmlDocx.asBlob(fullHtml);
             saveAs(converted, 'document.docx');
         }
