@@ -10,51 +10,36 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 10px; margin: 0; }
         
-        /* الترويسة الثابتة للطباعة */
-        .main-container { width: 100%; border-collapse: collapse; }
-        .header-row { display: table-header-group; }
+        /* الترويسة */
+        .page-header { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 2px solid #ccc; margin-bottom: 20px; }
+        .page-header img { width: 50px; height: 50px; object-fit: cover; }
         
-        .header-content { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 2px solid #ccc; }
-        .header-content img { width: 50px; height: 50px; object-fit: cover; }
-        
-        /* الاقسام */
         .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; position: relative; }
         .delete-btn { color: red; cursor: pointer; position: absolute; top: 5px; left: 5px; font-weight: bold; }
         
         /* الجداول */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
-        td, th { padding: 8px; border: 1px solid black !important; text-align: center; overflow-wrap: break-word; }
-        th { background-color: #AFEEEE !important; display: table-header-group; } /* تثبيت رأس الجدول */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: auto; }
+        td, th { padding: 8px; border: 1px solid black !important; text-align: center; }
+        th { background-color: #AFEEEE !important; position: sticky; top: 0; z-index: 10; }
         
-        .cell-edit { min-height: 20px; outline: none; white-space: pre-wrap; }
+        /* السماح بأسطر جديدة */
+        .cell-edit { min-height: 20px; outline: none; white-space: pre-wrap; word-break: break-word; }
 
         @media print {
             .no-print { display: none !important; }
+            thead { display: table-header-group; }
         }
     </style>
 </head>
 <body>
 
-    <table class="main-container">
-        <thead class="header-row">
-            <tr>
-                <td>
-                    <div class="header-content">
-                        <input type="file" class="no-print" accept="image/*" onchange="showImage(event, 'header-img')">
-                        <div id="header-img"></div>
-                        <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند الرئيسي</h2>
-                    </div>
-                </td>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>
-                    <div id="content"></div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="page-header">
+        <input type="file" class="no-print" accept="image/*" onchange="showImage(event, 'header-img')">
+        <div id="header-img"></div>
+        <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند الرئيسي</h2>
+    </div>
+
+    <div id="content"></div>
 
     <div class="no-print" style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px;">
         <button onclick="setDir('rtl')">RTL</button>
@@ -72,9 +57,9 @@
             reader.onload = function() {
                 const img = document.createElement('img');
                 img.src = reader.result;
-                const target = document.getElementById(targetId);
-                target.innerHTML = '';
-                target.appendChild(img);
+                img.style.width = '50px';
+                document.getElementById(targetId).innerHTML = '';
+                document.getElementById(targetId).appendChild(img);
             }
             reader.readAsDataURL(event.target.files[0]);
         }
@@ -106,8 +91,16 @@
         }
 
         function exportToWord() {
-            const content = document.querySelector('.main-container').outerHTML;
-            const fullHtml = `<html dir="${document.documentElement.dir}"><body>${content}</body></html>`;
+            // تحديث محتوى الـ divs القابلة للتحرير قبل التصدير
+            document.querySelectorAll('.cell-edit, [contenteditable="true"]').forEach(el => {
+                el.setAttribute('data-text', el.innerText);
+            });
+
+            const header = document.querySelector('.page-header').innerHTML;
+            const content = document.getElementById('content').innerHTML;
+            
+            // تصدير المحتوى بوضوح
+            const fullHtml = `<html dir="${document.documentElement.dir}"><body>${header}${content}</body></html>`;
             const converted = htmlDocx.asBlob(fullHtml);
             saveAs(converted, 'document.docx');
         }
