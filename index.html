@@ -7,12 +7,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script>
     
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
+        body { font-family: Arial, sans-serif; padding: 20px; }
         
         /* ترويسة الصفحة */
-        .main-header { display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
-        .main-header img { width: 60px; height: 60px; object-fit: cover; }
-        .main-header h2 { font-size: 16px; font-weight: normal; margin: 0; }
+        .page-header { display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+        .page-header img { width: 60px; height: 60px; object-fit: cover; }
+        .page-header h2 { font-size: 16px; font-weight: normal; margin: 0; }
         
         .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; position: relative; }
         .delete-btn { color: red; cursor: pointer; position: absolute; top: 5px; left: 5px; font-weight: bold; }
@@ -26,16 +26,15 @@
         
         @media print {
             .no-print { display: none !important; }
-            /* تثبيت الترويسة في كل صفحات الطباعة */
             @page { margin-top: 100px; }
-            .main-header { position: fixed; top: 0; left: 0; width: 100%; background: white; }
+            .page-header { position: fixed; top: 0; left: 0; width: 100%; background: white; }
             thead { display: table-header-group; }
         }
     </style>
 </head>
 <body>
 
-    <div class="main-header">
+    <div class="page-header">
         <input type="file" class="no-print" accept="image/*" onchange="showImage(event, 'header-img')">
         <div id="header-img"></div>
         <h2 contenteditable="true" style="flex-grow: 1;">عنوان المستند الرئيسي</h2>
@@ -55,8 +54,10 @@
             reader.onload = function() {
                 const img = document.createElement('img');
                 img.src = reader.result;
-                document.getElementById(targetId).innerHTML = '';
-                document.getElementById(targetId).appendChild(img);
+                img.style.width = '60px';
+                const target = document.getElementById(targetId);
+                target.innerHTML = '';
+                target.appendChild(img);
             }
             reader.readAsDataURL(event.target.files[0]);
         }
@@ -72,7 +73,7 @@
             tableHTML += `</tr></thead><tbody>`;
             for(let r=0; r<rows; r++) {
                 tableHTML += `<tr>`;
-                for(let c=0; c<cols; c++) tableHTML += `<td><input type="text" value=""></td>`;
+                for(let c=0; c<cols; c++) tableHTML += `<td><input type="text"></td>`;
                 tableHTML += `</tr>`;
             }
             tableHTML += `</tbody></table>`;
@@ -88,15 +89,14 @@
         }
 
         function exportToWord() {
-            // تحديث قيم الـ inputs قبل التصدير
+            // تحديث قيم الـ Inputs قبل التصدير لضمان ظهور النصوص في ملف الوورد
             document.querySelectorAll('input[type="text"]').forEach(input => {
                 input.setAttribute('value', input.value);
             });
 
-            const header = document.querySelector('.main-header').innerHTML;
+            const header = document.querySelector('.page-header').innerHTML;
             const content = document.getElementById('content').innerHTML;
             
-            // دمج المحتوى مع تنسيقات أساسية
             const fullHtml = `
                 <html dir="rtl">
                 <head><style>body{font-family:Arial;} table{width:100%; border-collapse:collapse;} td,th{border:1px solid black; padding:5px; text-align:center;} th{background:#AFEEEE;}</style></head>
