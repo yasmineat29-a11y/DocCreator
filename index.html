@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alternative Word App</title>
-    <script src="https://unpkg.com/html-docx-js@0.3.1/dist/html-docx.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script>
+    
+    <script src="html-docx.js"></script>
+    <script src="FileSaver.js"></script>
     
     <style>
         body { font-family: Arial, sans-serif; padding: 10px; margin: 0; }
         
-        /* هيكل الطباعة للترويسة */
-        .print-only-header { display: table-header-group; }
-        .page-header { display: flex; align-items: center; gap: 15px; padding: 10px; border-bottom: 2px solid #ccc; }
-        .page-header img { width: 50px; height: 50px; object-fit: cover; }
+        /* الترويسة الثابتة */
+        .page-header { 
+            position: sticky; top: 0; background: white; z-index: 1000;
+            display: flex; align-items: center; gap: 15px; padding: 10px; 
+            border-bottom: 2px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
 
         .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; position: relative; }
         .delete-btn { color: red; cursor: pointer; position: absolute; top: 5px; left: 5px; font-weight: bold; }
@@ -23,41 +26,28 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         td, th { padding: 8px; border: 1px solid black !important; text-align: center; }
         th { background-color: #AFEEEE !important; }
-        
-        /* تكرار رأس الجدول في الطباعة */
-        thead { display: table-header-group; }
 
         .cell-edit { min-height: 20px; outline: none; white-space: pre-wrap; word-break: break-word; }
 
         @media print {
             .no-print { display: none !important; }
+            .page-header { position: static; box-shadow: none; }
         }
     </style>
 </head>
 <body>
 
-    <table style="width: 100%; border: none;">
-        <thead class="print-only-header">
-            <tr>
-                <td>
-                    <div class="page-header">
-                        <div id="header-img"></div>
-                        <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند</h2>
-                    </div>
-                </td>
-            </tr>
-        </thead>
-    </table>
-
-    <div id="ui-header" class="page-header no-print">
-        <input type="file" accept="image/*" onchange="showImage(event, 'header-img')">
+    <div class="page-header">
         <div id="header-img"></div>
         <h2 contenteditable="true" style="font-size: 16px; margin: 0;">عنوان المستند</h2>
+        <div class="no-print" style="margin-right: auto;">
+            <input type="file" accept="image/*" onchange="showImage(event, 'header-img')" style="width: 80px;">
+        </div>
     </div>
 
     <div id="content"></div>
 
-    <div class="no-print" style="margin-top: 20px;">
+    <div class="no-print" style="margin-top: 20px; position: fixed; bottom: 10px; background: #f0f0f0; padding: 10px; width: 100%;">
         <button onclick="setDir('rtl')">RTL</button>
         <button onclick="setDir('ltr')">LTR</button>
         <button onclick="addSection()">+ إضافة قسم</button>
@@ -74,10 +64,9 @@
                 const img = document.createElement('img');
                 img.src = reader.result;
                 img.style.width = '50px';
-                document.querySelectorAll('#' + targetId).forEach(el => {
-                    el.innerHTML = '';
-                    el.appendChild(img.cloneNode(true));
-                });
+                const container = document.getElementById(targetId);
+                container.innerHTML = '';
+                container.appendChild(img);
             }
             reader.readAsDataURL(event.target.files[0]);
         }
@@ -85,6 +74,8 @@
         function addSection() {
             const rows = prompt("عدد الصفوف:", "2");
             const cols = prompt("عدد الأعمدة:", "2");
+            if(!rows || !cols) return;
+            
             const div = document.createElement('div');
             div.className = 'section';
             
@@ -109,10 +100,11 @@
         }
 
         function exportToWord() {
-            // دمج الترويسة (من الجدول) والمحتوى
-            const header = document.querySelector('.print-only-header').outerHTML;
+            const header = document.querySelector('.page-header').innerHTML;
             const content = document.getElementById('content').innerHTML;
-            const fullHtml = `<html><body dir="${document.documentElement.dir}"><table>${header}</table>${content}</body></html>`;
+            const fullHtml = `<html><body dir="${document.documentElement.dir}">
+                <div style="border-bottom: 2px solid #ccc; padding: 10px;">${header}</div>
+                ${content}</body></html>`;
             
             const converted = htmlDocx.asBlob(fullHtml);
             saveAs(converted, 'document.docx');
